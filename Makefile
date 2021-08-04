@@ -85,13 +85,12 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
-#test: manifests generate fmt vet envtest ## Run tests.
-#	go test ./... -coverprofile cover.out
-ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
-test: manifests generate fmt vet ## Run tests.
-	mkdir -p ${ENVTEST_ASSETS_DIR}
-	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl --proxy http://192.168.116.189:1087 -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.7.2/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+# https://book.kubebuilder.io/reference/envtest.html
+test: manifests generate fmt vet envtest ## Run tests.
+	test -f envtest-bins.tar.gz || curl --proxy http://192.168.116.189:1087 -sSLo envtest-bins.tar.gz "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-${K8S_VERSION}-$(go env GOOS)-$(go env GOARCH).tar.gz"
+	mkdir -p /usr/local/kubebuilder
+	tar -C /usr/local/kubebuilder --strip-components=1 -zvxf envtest-bins.tar.gz
+	go test ./... -coverprofile cover.out
 
 ##@ Build
 
